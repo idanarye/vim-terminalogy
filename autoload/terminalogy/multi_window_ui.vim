@@ -4,10 +4,13 @@ function! terminalogy#multi_window_ui#invoke(template, args)
     let l:terminalogy.origBuf = bufnr('')
     let l:terminalogy.origCursor = getcurpos()
 
+    let l:command = a:template.formatInitialCommand(a:args)
+
     tabnew
     let l:uniqueId = bufnr('')
     setlocal buftype=nofile
     setlocal bufhidden=wipe
+    setlocal winfixheight
     execute 'silent file terminalogy:'.l:uniqueId.':command'
     let b:terminalogy = l:terminalogy
     let l:terminalogy.commandBuffer = bufnr('')
@@ -27,18 +30,28 @@ function! terminalogy#multi_window_ui#invoke(template, args)
     nnoremap <buffer> <Cr> :call b:terminalogy.run()<Cr>
     inoremap <buffer> <Cr> <C-o>:call b:terminalogy.run()<Cr>
 
-    call b:terminalogy.init()
+    call b:terminalogy.init(l:command)
 endfunction
 
 let s:terminalogy = {
             \ 'active': 1,
-            \ 'command': '',
             \ }
 
-function! s:terminalogy.init() dict abort
-    call setline(1, self.command)
+function! s:terminalogy.init(command) dict abort
+    let l:command = split(a:command, "\<Plug>", 1)
+
+    if 1 == len(l:command)
+        call setline(1, l:command[0])
+    elseif 2 == len(l:command)
+        call setline(1, l:command[0].l:command[1])
+        call setpos('.', [0, line('.'), len(l:command[0]) + 1, 0])
+        startinsert
+    else
+        throw '<Plug> may only appear once in a command'
+    endif
+
     call terminalogy#util#doInAnotherBuffer(self.resultBuffer,
-                \ 'normal! ggdG',
+                \ 'normal! "_ggdG',
                 \ [function('setline'), [1, self.template.prompt]],
                 \ )
 endfunction
@@ -64,9 +77,9 @@ endfunction
 function! s:terminalogy.run() dict abort
     let [l:command] = getbufline(self.commandBuffer, 1, '$')
     call terminalogy#util#doInAnotherBuffer(self.resultBuffer,
-                \ 'normal! ggdG',
+                \ 'normal! "_ggdG',
                 \ [function('setline'), [1, self.template.prompt.l:command]],
                 \ 'normal! G',
-                \ 'silent read! '.l:command,
+                \ 'silent read! '.self.template.manipulateCommandBeforeSending(l:command),
                 \ )
 endfunction

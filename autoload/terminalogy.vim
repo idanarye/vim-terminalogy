@@ -16,13 +16,19 @@ function! terminalogy#complete(argLead, cmdLine, cursorPos) abort
 endfunction
 
 function! terminalogy#invoke(...) abort
-    if 0 == a:0 " basic template
-        let l:template = terminalogy#config#getBasic()
-        let l:args = []
-    else
-        let l:template = terminalogy#config#getTemplate(a:000[0])
-        let l:args = a:000[1:]
-    endif
-    let l:template = terminalogy#template#createTemplate(l:template)
-    call terminalogy#multi_window_ui#invoke(l:template, l:args)
+    try
+        if 0 == a:0 " basic template
+            let l:template = terminalogy#config#getBasic()
+            let l:args = []
+        else
+            let l:template = terminalogy#config#getTemplate(a:000[0])
+            let l:args = a:000[1:]
+        endif
+        let l:template = terminalogy#template#createTemplate(l:template)
+        call terminalogy#multi_window_ui#invoke(l:template, l:args)
+    catch /\v^\[TMLG].*/
+        echohl Error
+        echo v:exception[6:]
+        echohl None
+    endtry
 endfunction

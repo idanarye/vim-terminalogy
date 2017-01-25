@@ -1,4 +1,4 @@
-function! terminalogy#multi_window_ui#invoke(template, args)
+function! terminalogy#multi_window_ui#invoke(template, args) abort
     let l:terminalogy = copy(s:terminalogy)
     let l:terminalogy.template = a:template
     let l:terminalogy.origBuf = bufnr('')
@@ -38,16 +38,14 @@ let s:terminalogy = {
             \ }
 
 function! s:terminalogy.init(command) dict abort
-    let l:command = split(a:command, "\<Plug>", 1)
-
-    if 1 == len(l:command)
-        call setline(1, l:command[0])
-    elseif 2 == len(l:command)
-        call setline(1, l:command[0].l:command[1])
-        call setpos('.', [0, line('.'), len(l:command[0]) + 1, 0])
+    if 1 == len(a:command)
+        call setline(1, a:command[0])
+    elseif 2 == len(a:command)
+        call setline(1, a:command[0].a:command[1])
+        call setpos('.', [0, line('.'), len(a:command[0]) + 1, 0])
         startinsert
     else
-        throw '<Plug> may only appear once in a command'
+        throw "\6 may only appear once in a command"
     endif
 
     call terminalogy#util#doInAnotherBuffer(self.resultBuffer,

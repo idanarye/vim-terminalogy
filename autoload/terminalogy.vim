@@ -7,6 +7,7 @@ function! terminalogy#complete(argLead, cmdLine, cursorPos) abort
     else
         let l:patternName = remove(l:args, 0)
         let l:template = terminalogy#config#getTemplate(l:patternName)
+        let l:template = terminalogy#template#createTemplate(l:template)
         if has_key(l:template, 'complete')
             return l:template.complete(l:args)
         else

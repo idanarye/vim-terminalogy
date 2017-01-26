@@ -60,6 +60,21 @@ function! s:base.manipulateCommandBeforeSending(command) dict abort
     return l:command
 endfunction
 
+function! s:base.complete(args) dict abort
+    let l:argNumber = len(a:args)
+    if has_key(self, 'complete_'.l:argNumber)
+        let l:Complete = get(self, 'complete_'.l:argNumber)
+        if type(l:Complete) == type([])
+            let l:result = l:Complete
+        elseif type(l:Complete) == type(function('tr'))
+            let l:result = call(l:Complete, [a:args], self)
+        endif
+    else
+        let l:result = []
+    endif
+    return filter(copy(l:result), 'terminalogy#util#startsWith(v:val, a:args[-1])')
+endfunction
+
 function! terminalogy#template#parseCommandTemplate(expr) abort
     let l:expr = a:expr
     let l:result = []

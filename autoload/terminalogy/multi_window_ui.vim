@@ -27,8 +27,8 @@ function! terminalogy#multi_window_ui#invoke(template, args) abort
     execute bufwinnr(l:terminalogy.commandBuffer).'wincmd w'
     resize 3
 
-    nnoremap <buffer> <Cr> :call b:terminalogy.run()<Cr>
-    inoremap <buffer> <Cr> <C-o>:call b:terminalogy.run()<Cr>
+    nnoremap <buffer> <Cr> :call terminalogy#util#catchAndPrintErrors([b:terminalogy, 'run'])<Cr>
+    inoremap <buffer> <Cr> <C-o>:call terminalogy#util#catchAndPrintErrors([b:terminalogy, 'run'])<Cr>
 
     call b:terminalogy.init(l:command)
 endfunction
@@ -45,7 +45,7 @@ function! s:terminalogy.init(command) dict abort
         call setpos('.', [0, line('.'), len(a:command[0]) + 1, 0])
         startinsert
     else
-        throw "\6 may only appear once in a command"
+        throw 'command has '.len(a:command).' parts - only 1 or 2 are supported'
     endif
 
     call terminalogy#util#doInAnotherBuffer(self.resultBuffer,
@@ -63,7 +63,7 @@ function! s:terminalogy.bufferExit() dict abort
     let l:commandResult = getbufline(self.resultBuffer, 1, '$')
     call terminalogy#util#doInAnotherBuffer(self.origBuf,
                 \ [function('cursor'), [self.origCursor[1:]]],
-                \ [self.template.insertResultLines, [l:commandResult], self.template],
+                \ [self.template, 'insertResultLines', l:commandResult],
                 \ )
     for l:buf in [self.commandBuffer, self.resultBuffer]
         if l:buf != bufnr('')
@@ -73,12 +73,16 @@ function! s:terminalogy.bufferExit() dict abort
 endfunction
 
 function! s:terminalogy.run() dict abort
-    let [l:command] = getbufline(self.commandBuffer, 1, '$')
+    try
+        let [l:command] = getbufline(self.commandBuffer, 1, '$')
+    catch /E687/
+        throw '[TMLG]Multiline commands are not supported'
+    endtry
     call terminalogy#util#doInAnotherBuffer(self.resultBuffer,
                 \ 'normal! "_ggdG',
                 \ [function('setline'), [1, self.template.prompt.l:command]],
                 \ 'normal! G',
                 \ [function('append'), ['.', self.template.manipulateCommandBeforeSending(l:command)]],
-                \ '+1,$!'.&shell,
+                \ 'silent +1,$!'.&shell,
                 \ )
 endfunction

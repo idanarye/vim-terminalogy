@@ -1,12 +1,11 @@
 function! terminalogy#util#getSetting(name, default) abort
     let l:fullName = 'terminalogy_'.a:name
-    if has_key(b:, l:fullName)
-        return b:[l:fullName]
-    elseif has_key(g:, l:fullName)
-        return g:[l:fullName]
-    else
-        return a:default
-    endif
+    for l:dict in [b:, g:]
+        if has_key(l:dict, l:fullName)
+            return l:dict[l:fullName]
+        endif
+    endfor
+    return a:default
 endfunction
 
 function! terminalogy#util#startsWith(str, prefix) abort
@@ -22,7 +21,13 @@ function! terminalogy#util#doCommands(commands) abort
         if type(l:command) == type('')
             execute l:command
         elseif type(l:command) == type([])
-            let l:result = call(function('call'), l:command)
+            if type(l:command[0]) == type({})
+                " First argument is object, second argument is method name,
+                " other arguments are args
+                let l:result = call(l:command[0][l:command[1]], l:command[2:], l:command[0])
+            else
+                let l:result = call(function('call'), l:command)
+            endif
         else
             throw 'can not handle command '.string(l:command)
         endif
@@ -58,5 +63,15 @@ function! terminalogy#util#doInAnotherBuffer(bufnr, ...) abort
         endif
     finally
         let &lazyredraw = l:oldLazyredraw
+    endtry
+endfunction
+
+function! terminalogy#util#catchAndPrintErrors(...) abort
+    try
+        return terminalogy#util#doCommands(a:000)
+    catch /\v^\[TMLG].*/
+        echohl Error
+        echo v:exception[6:]
+        echohl None
     endtry
 endfunction

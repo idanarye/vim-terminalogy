@@ -3,12 +3,17 @@ function! terminalogy#config#getBasic() abort
 endfunction
 
 function! terminalogy#config#getTemplate(name) abort
-    if has_key(b:, 'terminalogy_templates')
-        if has_key(b:terminalogy_templates, a:name)
-            return b:terminalogy_templates[a:name]
-        endif
-    endif
-    return g:terminalogy_templates[a:name]
+    for l:dict in [b:, g:]
+        try
+            " NOTE: Vimscript is a mess. If I'd just return it directly, it
+            " wouldn't catch the exception...
+            let l:result = g:terminalogy_templates[a:name]
+            return l:result
+        catch /E716/
+            " Key not present - just try the next one
+        endtry
+    endfor
+    throw '[TMLG]Unknown template '.a:name
 endfunction
 
 function! terminalogy#config#getNamesForCompletion(prefix) abort

@@ -6,15 +6,27 @@ endfunction
 
 let s:base = {
             \ 'linesAbove': [],
-            \ 'command': '',
+            \ 'command': '\0',
             \ 'prompt': '$ ',
             \ 'linesBelow': [],
+            \ 'indent': 0,
             \ 'runInDir': '',
             \ 'implicitFilters': [],
             \ }
 
 function! s:base.manipulateResultLines(lines) dict abort
-    return self.linesAbove + a:lines + self.linesBelow
+    let l:lines = a:lines
+    if !empty(self.indent)
+        if type(self.indent) == type(0)
+            let l:indent = repeat(' ', self.indent)
+        elseif type(self.indent) == type('')
+            let l:indent = self.indent
+        else
+            throw 'Unsupported type for indent'
+        endif
+        let l:lines = map(copy(l:lines), 'l:indent.v:val')
+    endif
+    return self.linesAbove + l:lines + self.linesBelow
 endfunction
 
 function! s:base.insertResultLines(lines) dict abort
@@ -30,7 +42,7 @@ function! s:base.formatInitialCommand(args) dict abort
             let l:result[l:idx] .= l:part
         elseif part.arg == 0
             if 0 != l:idx
-                throw '[TMLG]Multiple \0 in the same command'
+                throw 'Multiple \0 in the same command'
             endif
             let l:idx = 1
             call add(l:result, '')
@@ -52,7 +64,14 @@ endfunction
 function! s:base.manipulateCommandBeforeSending(command) dict abort
     let l:command = a:command
     if !empty(self.runInDir)
-        let l:command = printf('cd %s; %s', shellescape(self.runInDir), l:command)
+        if type(self.runInDir) == type('')
+            let l:runInDir = self.runInDir
+        elseif type(self.runInDir) == type(function('tr'))
+            let l:runInDir = self.runInDir()
+        else
+            throw 'Unsupported type for runInDir'
+        endif
+        let l:command = printf('cd %s; %s', shellescape(l:runInDir), l:command)
     endif
     for l:filter in self.implicitFilters
         let l:command = l:command.' | '.l:filter

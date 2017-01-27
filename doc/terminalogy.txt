@@ -4,7 +4,7 @@
 Author:  Idan Arye <https://github.com/idanarye/>
 License: Same terms as Vim itself (see |license|)
 
-Version: 0.1.0
+Version: 0.1.1
 
 INTRODUCTION                                                      *terminalogy*
 
@@ -60,10 +60,10 @@ arguments will make it use the basic template.
 
 CONFIGURATION                                      *terminalogy-configuration*
 
-*g:terminalogy_basic*/*b:terminalogy_basic* is a dictionary representing the
+*g:terminalogy_basic* / *b:terminalogy_basic* is a dictionary representing the
 basic template. The b: version, if exist, takes precedence over the g: version.
 
-*g:terminalogy_templates*/*b:terminalogy_templates* are dictionaries where the
+*g:terminalogy_templates* / *b:terminalogy_templates* are dictionaries where the
 keys are template names and the values are template definitions. See
 |terminalogy-template| for how to configure the individual templates.  A
 template is first searched in the b: version, and if can not be found it's

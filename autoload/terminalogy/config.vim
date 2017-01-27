@@ -7,7 +7,7 @@ function! terminalogy#config#getTemplate(name) abort
         try
             " NOTE: Vimscript is a mess. If I'd just return it directly, it
             " wouldn't catch the exception...
-            let l:result = g:terminalogy_templates[a:name]
+            let l:result = l:dict.terminalogy_templates[a:name]
             return l:result
         catch /E716/
             " Key not present - just try the next one

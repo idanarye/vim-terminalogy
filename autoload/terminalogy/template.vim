@@ -91,7 +91,7 @@ function! s:base.complete(args) dict abort
     else
         let l:result = []
     endif
-    return filter(copy(l:result), 'terminalogy#util#startsWith(v:val, a:args[-1])')
+    return l:result
 endfunction
 
 function! terminalogy#template#parseCommandTemplate(expr) abort

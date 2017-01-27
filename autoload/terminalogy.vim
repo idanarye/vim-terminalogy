@@ -9,7 +9,7 @@ function! terminalogy#complete(argLead, cmdLine, cursorPos) abort
         let l:template = terminalogy#config#getTemplate(l:patternName)
         let l:template = terminalogy#template#createTemplate(l:template)
         if has_key(l:template, 'complete')
-            return l:template.complete(l:args)
+            return filter(copy(l:template.complete(l:args)), 'terminalogy#util#startsWith(v:val, l:args[-1])')
         else
             return []
         endif

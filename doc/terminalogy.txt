@@ -1,0 +1,145 @@
+*terminalogy.txt* Show and tell with a shell
+
+
+Author:  Idan Arye <https://github.com/idanarye/>
+License: Same terms as Vim itself (see |license|)
+
+Version: 0.1.0
+
+INTRODUCTION                                                      *terminalogy*
+
+Terminalogy is a plugin for embedding examples of shell commands in text. This
+is a task one needs to do so when:
+
+* Creating documentation/tutorials - you may want to give an example of what
+  you just explained.
+* Answering questions on Stack Overflow - show the asker an example of what
+  you got when you ran it and explain how it should solve their case.
+* Investigating tickets in a bug tracker - run the program with certain input,
+  or grep/awk/sed/whatever the logs, and write it in the comments so that
+  you(and others who loot at that ticket) will know what has already been
+  investigated and what was found out.
+  (BTW: this one is the original usecase that prompt me to create this plugin)
+
+The usual way to do this is to run the command in a console - but then you
+have to copy-paste it with your mouse...
+
+Alternatively, one could write the command in Vim, and use |:range!| to run it
+through a shell - but that's manual work, and it makes it hard to tweak with
+the command to get the results you want...
+
+Terminalogy allows you to tweak with the command in a Vim buffer, and with a
+single key press see the results. When you are satisfied, close the buffer and
+the command and it's output will be embedded to your original text.
+
+
+KEY FEATURES                                         *terminalogy-key-features*
+
+* Edit a command in one buffer, and see the output in another buffer.
+* Automatically copy the command and output to your original text when you are
+  done.
+* Configure templates with arguments for commands you commonly use.
+* Easily configure custom autocompletion for template arguments.
+* Format the command and it's output before embedding it in the text(so that
+  it'll be displayed properly with the target's markup).
+
+
+USAGE                                                      *terminalogy-usage*
+
+Use *:Terminalogy* to open a tab with two windows. The top window is for
+entering the command, and the bottom window is for displaying it's output. If
+you press <Cr> in insert or command mode, the command will run and it's output
+will be displayed in the bottom window. Once you close any of these windows,
+the text from the bottom(output) window will be written to where you originally
+invoked |:Terminalogy| from.
+
+|:Terminalogy| can receive a template name as it's first argument. Any argument
+after that will be passed to the template. Running |:Terminalogy| with no
+arguments will make it use the basic template.
+
+
+CONFIGURATION                                      *terminalogy-configuration*
+
+*g:terminalogy_basic*/*b:terminalogy_basic* is a dictionary representing the
+basic template. The b: version, if exist, takes precedence over the g: version.
+
+*g:terminalogy_templates*/*b:terminalogy_templates* are dictionaries where the
+keys are template names and the values are template definitions. See
+|terminalogy-template| for how to configure the individual templates.  A
+template is first searched in the b: version, and if can not be found it's
+searched in the g: version.
+
+
+CONFIGURATION                                          *terminalogy-templates*
+
+A template is a dictionary that tells Terminalogy how to to build your shell
+commands, how to run them, and how to embed them in your text. It can contain
+the following fields:
+
+                                                *terminalogy-templates-command*
+The "command" field is the initial command that will be written in the command
+buffer. It may contain arguments in the form of "\1", "\2", "\3", etc.
+Arguments passed to |:Terminalogy| after the template name will be placed
+there. "\0" is a special argument that can only be used once, and if used
+|:Terminalogy| will automatically go into insert mode at it's location. "\\"
+can be used to escape a single backslash.
+
+                                             *terminalogy-templates-linesAbove*
+                                             *terminalogy-templates-linesBelow*
+                                                 *terminalogy-templates-indent*
+These fields are used for formatting the output before embedding it in the
+original text. Use them to apply markup rules.
+
+"linesAbove": A list of lines that will be added above the command.
+"linesBelow": A list of lines that will be added below the command's output.
+"indent": A number - that number of spaces will be added before each line.
+          A string - each line will be prefixed with it.
+          NOTE: The lines from "linesAbove" and "linesBelow" will not be
+          indented.
+
+Example: >
+    let g:terminalogy_templates.github = {
+                \ 'linesAbove': ['```'],
+                \ 'linesBelow': ['```'],
+                \ }
+    let g:terminalogy_templates.stack_overflow = {
+                \ 'linesAbove': [''],
+                \ 'indent': 4,
+                \ }
+<
+
+                                  *terminalogy-templates-manipulateResultLines*
+"manipulateResultLines" can be a function that receives the output as a list of
+lines, manipulates and returns them before embedding them in the original text.
+
+If you set this function the other formatting settings("linesAbove",
+"linesBelow" and "indent") will be ignored(because the default value of this
+field is function that applies them).
+
+                                               *terminalogy-templates-runInDir*
+"runInDir" can be a string that represents a directory the command will run it.
+It can also be a function that receives no arguments and returns that string.
+
+                                                 *terminalogy-templates-prompt*
+"prompt" is a string that'll prefix the command(but will not be actually sent
+to the shell)
+
+                                        *terminalogy-templates-implicitFilters*
+"implicitFilters" can be a list of shell commands that the command will be piped into. Use that to
+beautify it(if needed) - for example, to remove unprintable ASCII codes.
+
+                    *terminalogy-autocomplete* *terminalogy-templates-complete*
+"complete" can be a function that provides autocompletion for template
+arguments in :|Terminalogy|. It receives a single arguments - the list of
+arguments from |:Terminalogy| after the template name. The last argument is
+always the one being completed(can be an empty string). The function should
+return a list of completion candidates. There is no need to filter the results
+by prefix - this will be done automatically by the Terminalogy.
+
+Completion can also be provided for individual arguments, by putting functions
+in "completion_1", "completion_2" etc. These functions will only be called for
+the argument of that index, but will still receive the full list of arguments.
+The will only be used if you don't set "complete".
+
+Individual argument completion fields can also be a list of possible
+completions.

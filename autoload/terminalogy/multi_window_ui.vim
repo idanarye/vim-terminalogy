@@ -78,6 +78,7 @@ function! s:terminalogy.run() dict abort
                 \ 'normal! "_ggdG',
                 \ [function('setline'), [1, self.template.prompt.l:command]],
                 \ 'normal! G',
-                \ 'silent read! '.self.template.manipulateCommandBeforeSending(l:command),
+                \ [function('append'), ['.', self.template.manipulateCommandBeforeSending(l:command)]],
+                \ '+1,$!'.&shell,
                 \ )
 endfunction

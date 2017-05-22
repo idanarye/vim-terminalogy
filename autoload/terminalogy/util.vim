@@ -75,3 +75,12 @@ function! terminalogy#util#catchAndPrintErrors(...) abort
         echohl None
     endtry
 endfunction
+
+function! terminalogy#util#bufTabNr(bufnr)
+    for l:tab in range(1, tabpagenr('$'))
+        if -1 != index(tabpagebuflist(l:tab), a:bufnr)
+            return l:tab
+        endif
+    endfor
+    return -1
+endfunction

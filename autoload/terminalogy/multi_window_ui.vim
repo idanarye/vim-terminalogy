@@ -14,7 +14,7 @@ function! terminalogy#multi_window_ui#invoke(template, args) abort
     execute 'silent file terminalogy:'.l:uniqueId.':command'
     let b:terminalogy = l:terminalogy
     let l:terminalogy.commandBuffer = bufnr('')
-    autocmd BufDelete <buffer> call b:terminalogy.bufferExit()
+    autocmd BufDelete <buffer> if exists('b:terminalogy') | call b:terminalogy.bufferExit() | endif
 
     rightbelow new
     setlocal buftype=nofile
@@ -22,7 +22,7 @@ function! terminalogy#multi_window_ui#invoke(template, args) abort
     execute 'silent file terminalogy:'.l:uniqueId.':result'
     let b:terminalogy = l:terminalogy
     let l:terminalogy.resultBuffer = bufnr('')
-    autocmd BufDelete <buffer> call b:terminalogy.bufferExit()
+    autocmd BufDelete <buffer> if exists('b:terminalogy') | call b:terminalogy.bufferExit() | endif
 
     execute bufwinnr(l:terminalogy.commandBuffer).'wincmd w'
     resize 3
@@ -59,17 +59,38 @@ function! s:terminalogy.bufferExit() dict abort
         " Function was already called, now it's automaticllay called on the other buffer
         return
     endif
-    let self.active = 0
+
+    if bufnr('') == self.commandBuffer
+        let l:otherBufferToKill = self.resultBuffer
+    elseif bufnr('') == self.resultBuffer
+        let l:otherBufferToKill = self.commandBuffer
+    else
+        throw 'bufferExit() from wrong buffer'
+    endif
+
     let l:commandResult = getbufline(self.resultBuffer, 1, '$')
-    call terminalogy#util#doInAnotherBuffer(self.origBuf,
-                \ [function('cursor'), [self.origCursor[1:]]],
-                \ [self.template, 'insertResultLines', l:commandResult],
-                \ )
-    for l:buf in [self.commandBuffer, self.resultBuffer]
-        if l:buf != bufnr('')
-            execute 'bd! '.l:buf
+
+    let l:origBufwin = bufwinnr(self.origBuf)
+    if -1 < l:origBufwin " Open in this tab
+        execute l:origBufwin.'wincmd w'
+    else " not open in this tab - go to orig tab
+        let l:buftab = terminalogy#util#bufTabNr(self.origBuf)
+        if -1 < l:buftab
+            execute l:buftab.'tabnext'
+            execute bufwinnr(self.origBuf).'wincmd w'
+        else
+            " orig tab closed - do nothing
         endif
-    endfor
+    endif
+
+    if bufnr('') == self.origBuf
+        call cursor(self.origCursor[1:])
+        call self.template.insertResultLines(l:commandResult)
+    endif
+
+    let self.resultBuffer = -1
+    let self.commandBuffer = -1
+    execute 'bdelete! '.l:otherBufferToKill
 endfunction
 
 function! s:terminalogy.run() dict abort

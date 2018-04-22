@@ -8,13 +8,15 @@ let s:base = {
             \ 'linesAbove': [],
             \ 'command': '\0',
             \ 'prompt': '$ ',
+            \ 'linesBetween': [''],
             \ 'linesBelow': [],
             \ 'indent': 0,
             \ 'runInDir': '',
             \ 'implicitFilters': [],
             \ }
 
-function! s:base.manipulateResultLines(lines) dict abort
+function! s:base.manipulateResultLines(command, lines) dict abort
+    let l:command = a:command
     let l:lines = a:lines
     if !empty(self.indent)
         if type(self.indent) == type(0)
@@ -24,13 +26,14 @@ function! s:base.manipulateResultLines(lines) dict abort
         else
             throw 'Unsupported type for indent'
         endif
+        let l:command = map(copy(l:command), 'l:indent.v:val')
         let l:lines = map(copy(l:lines), 'l:indent.v:val')
     endif
-    return self.linesAbove + l:lines + self.linesBelow
+    return self.linesAbove + l:command + self.linesBetween + l:lines + self.linesBelow
 endfunction
 
-function! s:base.insertResultLines(lines) dict abort
-    call append(line('.'), self.manipulateResultLines(a:lines))
+function! s:base.insertResultLines(command, lines) dict abort
+    call append(line('.'), self.manipulateResultLines(a:command, a:lines))
 endfunction
 
 function! s:base.formatInitialCommand(args) dict abort

@@ -4,7 +4,7 @@
 Author:  Idan Arye <https://github.com/idanarye/>
 License: Same terms as Vim itself (see |license|)
 
-Version: 0.1.3
+Version: 0.1.3+
 
 INTRODUCTION                                                      *terminalogy*
 
@@ -85,36 +85,42 @@ there. "\0" is a special argument that can only be used once, and if used
 can be used to escape a single backslash.
 
                                              *terminalogy-templates-linesAbove*
+                                           *terminalogy-templates-linesBetween*
                                              *terminalogy-templates-linesBelow*
                                                  *terminalogy-templates-indent*
 These fields are used for formatting the output before embedding it in the
 original text. Use them to apply markup rules.
 
 "linesAbove": A list of lines that will be added above the command.
+"linesAbove": A list of lines that will be added between the command and it's
+              output.
 "linesBelow": A list of lines that will be added below the command's output.
 "indent": A number - that number of spaces will be added before each line.
           A string - each line will be prefixed with it.
-          NOTE: The lines from "linesAbove" and "linesBelow" will not be
-          indented.
+          NOTE: The lines from "linesAbove", "linesBetween" and "linesBelow"
+          will not be indented.
 
 Example: >
     let g:terminalogy_templates.github = {
                 \ 'linesAbove': ['```'],
+                \ 'linesBetween': [''],
                 \ 'linesBelow': ['```'],
                 \ }
     let g:terminalogy_templates.stack_overflow = {
                 \ 'linesAbove': [''],
+                \ 'linesBetween': [''],
                 \ 'indent': 4,
                 \ }
 <
 
                                   *terminalogy-templates-manipulateResultLines*
-"manipulateResultLines" can be a function that receives the output as a list of
-lines, manipulates and returns them before embedding them in the original text.
+"manipulateResultLines" can be a function that receives the command (with
+prefix) and the output as lists of lines, manipulates them, and returns a list
+of lines to embed in the original text.
 
-If you set this function the other formatting settings("linesAbove",
-"linesBelow" and "indent") will be ignored(because the default value of this
-field is function that applies them).
+If you set this function the other formatting settings ("linesAbove",
+"linesBetween", "linesBelow" and "indent") will be ignored(because the default
+value of this field is function that applies them).
 
                                                *terminalogy-templates-runInDir*
 "runInDir" can be a string that represents a directory the command will run it.

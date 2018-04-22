@@ -88,7 +88,17 @@ function! s:terminalogy.bufferExit() dict abort
 
         if bufnr('') == self.origBuf
             call cursor(self.origCursor[1:])
-            call self.template.insertResultLines(self.commandResult)
+            messages clear
+            let l:commandResult = self.commandResult
+            if has_key(self, 'lastCommand')
+                if self.lastCommand != self.commandResult[:len(self.lastCommand) - 1]
+                    throw 'BAD! lastCommand is not a prefix of commandResult'
+                endif
+                let l:lastCommand = self.commandResult[:len(self.lastCommand) - 1]
+                let l:commandResult = self.commandResult[len(self.lastCommand):]
+            endif
+
+            call self.template.insertResultLines(l:lastCommand, l:commandResult)
         endif
     endif
 endfunction
@@ -99,9 +109,10 @@ function! s:terminalogy.run() dict abort
     catch /E687/
         throw '[TMLG]Multiline commands are not supported'
     endtry
+    let self.lastCommand = split(self.template.prompt.l:command, '\n')
     call terminalogy#util#doInAnotherBuffer(self.resultBuffer,
                 \ 'normal! "_ggdG',
-                \ [function('setline'), [1, self.template.prompt.l:command]],
+                \ [function('setline'), [1, self.lastCommand]],
                 \ 'normal! G',
                 \ [function('append'), ['.', self.template.manipulateCommandBeforeSending(l:command)]],
                 \ 'silent +1,$!'.&shell,

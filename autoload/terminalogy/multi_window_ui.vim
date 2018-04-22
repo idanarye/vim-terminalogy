@@ -96,6 +96,10 @@ function! s:terminalogy.bufferExit() dict abort
                 endif
                 let l:lastCommand = self.commandResult[:len(self.lastCommand) - 1]
                 let l:commandResult = self.commandResult[len(self.lastCommand):]
+            else
+                " Assume it's the first line
+                let l:lastCommand = l:commandResult[:0]
+                let l:commandResult = l:commandResult[1:]
             endif
 
             call self.template.insertResultLines(l:lastCommand, l:commandResult)

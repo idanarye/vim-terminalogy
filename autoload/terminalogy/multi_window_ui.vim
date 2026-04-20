@@ -69,7 +69,7 @@ function! s:terminalogy.bufferExit() dict abort
         let self.commandResult = getbufline(self.resultBuffer, 1, '$')
         execute bufwinnr(l:otherBufferToKill).'wincmd w'
         " So that they won't be killed together(this cause bugs)
-        autocmd WinEnter <buffer> if exists('b:terminalogy') | call b:terminalogy.bufferExit() | endif
+        autocmd WinEnter <buffer> if exists('b:terminalogy') | call timer_start(0, {-> b:terminalogy.bufferExit()}) | endif
     else
         " Second window - close it and write to original location
         bdelete!
